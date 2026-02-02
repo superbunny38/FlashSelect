@@ -4,14 +4,18 @@
 
 FlashSelect is a high-performance, low-latency selection engine designed to ingest, index, and retrieve content items based on keyword relevance and real-time quota availability.
 
-
 The system is engineered to simulate a production-grade "hot path" service where P99 latency must remain under 10ms while handling concurrent reads (queries) and writes (quota decrements). A key architectural constraint is the seamless interoperability with a non-modifiable "Legacy System" (simulating high-debt monolithic dependencies), requiring strict RAII wrappers and memory safety guarantees.
+
+In east words, goal: Ingest a stream of millions of user queries and select the most relevant "News Headlines" (~= Ads) within a strict latency budget, while adhering to "View Quotas" (~= Campaign Budgets).
 
 ## Domain & Problem Statement
 In high-frequency content delivery (e.g., news tickers, stock alerts, real-time inventory), the system must satisfy two competing constraints:
 
 1. **Relevance**: Finding the best matching items for a user query.
 2. **Business Logic**: Enforcing strict display quotas (e.g., an item can only be shown 1000 times).
+2. **Geotargeting & Metadata Enrichment**: The system must ingest a massive, static dataset of Region Mappings (e.g., 1 -> "United States", 2 -> "Canada").
+- **Constraint**: Input queries may specify a target region by Name (e.g., "News in Canada"), but the internal engine must filter using Integer IDs for performance.
+- **Challenge**: Efficiently loading and bidirectional mapping (Name ↔ ID) of millions of region codes at startup without slowing down the boot time.
 
 ### The Challenge**:
 
@@ -22,15 +26,15 @@ In high-frequency content delivery (e.g., news tickers, stock alerts, real-time 
 - **Performance**: The system must utilize modern CPU cache hierarchies and minimize heap allocations during the request path.
 
 ## Technical Stack
-- Language: C++20 (utilizing Concepts, Ranges, `std::span`, `std::atomic`).
+- **Language**: C++20 (utilizing Concepts, Ranges, `std::span`, `std::atomic`).
 
-- Build System: CMake 3.20+.
+- **Build System**: CMake 3.20+.
 
-- Testing: Google Test (Unit), Google Benchmark (Performance).
+- **Testing**: Google Test (Unit), Google Benchmark (Performance).
 
-- Concurrency: std::jthread, `std::shared_mutex` (RWLocks), Atomic arithmetic for quotas.
+- **Concurrency**: std::jthread, `std::shared_mutex` (RWLocks), Atomic arithmetic for quotas.
 
-- Observability: Custom internal metrics collector (Counters, Histograms).
+- **Observability**: Custom internal metrics collector (Counters, Histograms).
 
 ## System Architecture
 
@@ -55,6 +59,20 @@ Deliverables:
 ModernItem: A wrapper class ensuring strict ownership semantics over legacy char* and raw pointers.
 
 Indexer: An asynchronous service that builds an std::unordered_map based Inverted Index without blocking the main thread.
+
+Day 4: The "Huge File" Parser.
+
+- Implement RegionMapService.
+
+- Task: Parse a CSV-style file containing ID-to-String mappings.
+
+- Optimization: Do not read the file line-by-line using std::getline (too slow). Use memory mapping (mmap simulation or large buffer reads) and std::from_chars (C++17/20 high-performance parsing).
+
+- Data Structure: Implement a Bidirectional Lookup:
+
+    - ID -> Name: A dense std::vector<std::string> (since IDs are sequential integers).
+
+    - Name -> ID: A std::unordered_map<std::string, int>.
 
 ** Milestone:** Zero memory leaks verified by Valgrind/ASan.
 
@@ -113,3 +131,10 @@ make
 ./bin/flash_engine --threads=8 --duration=60s
 
 ```
+
+# The "Principal Slayer" Mindset
+- Read Before You Write: You said you need to interact with existing code. This is 90% of the job. In this project, I will give you a "Legacy Interface" you must use but cannot change. This simulates the monolithic codebases you will face.
+
+- Performance is a Feature: You will obsess over CPU cycles, cache locality, and memory allocations.
+
+- Observability is God: If your code crashes, how do I know why? If you don't implement logging, metrics, and tracing, your code is garbage.
