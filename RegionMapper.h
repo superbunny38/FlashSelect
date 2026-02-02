@@ -13,25 +13,49 @@ using namespace std;
 class RegionMapper {
     public:
         void LoadFromFile(const string& filename){
-            //Read file inro buffer
-            ifstream file(filename, ios::binary | ios::ate);
-            if (!file) {
-                cerr << "Error opening file: " << filename << endl;
-                return;
+            //1. Resize dataBuffer to file size
+            auto size = filesystem::file_size(filename);
+            dataBuffer.resize(size);
+
+            //2. Read the entire file into dataBuffer
+            ifstream file(filename, ios::binary);
+            file.read(dataBuffer.data(), size);
+
+            //3. Iterate through dataBuffer to parse ID and Name pairs
+            const char* ptr = dataBuffer.data();
+            const char* end = ptr + size;
+
+            while (ptr < end) {
+                int id;
+                auto [next, ec] = from_chars(ptr, end, id);
+                if (ec != std::errc()) {
+                    cerr << "Error parsing ID\n";
+                    break;
+                }
+
+                ptr = next+1; // Move past the null terminator
+
+                const char* name_start = ptr;
+                while (ptr < end && *ptr != '\n' && *ptr != '\r') {
+                    ptr++;
+                }
+
+                //4. Update lookups (id_to_name_ and name_to_id_)
+                string_view name(name_start, static_cast<size_t>(ptr - name_start));
+
+                if (id>= id_to_name_.size()) {
+                    id_to_name_.resize(id + 1);
+                }
+                id_to_name_[id] = name;
+                name_to_id_[name] = id;
+
+                //skip newline characters
+                while (ptr < end && (*ptr == '\n' || *ptr == '\r')) {
+                    ptr++;
+                
+                }
             }
-            streamsize fileSize = file.tellg();
-            dataBuffer.resize(fileSize);
-            file.seekg(0, ios::beg);
-            file.read(dataBuffer.data(), fileSize);
-
-            //Parse buffer line by line
-            char* ptr = dataBuffer.data();
-            char* end = ptr + fileSize;
-
-            while(ptr<end){
-                char* lineStart = ptr;
-
-            }
+            
         }
 
         //O(1) lookup: Returns the name corresponding to the given ID. (Returns a view into the main buffer)
