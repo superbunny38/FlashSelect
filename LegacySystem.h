@@ -6,16 +6,16 @@
 #include <string>
 #include <thread>   
 
-struct  LegacySystem
+struct  LegacyItem
 {
     char* id;
     int value;
     int quota_remaining;
 };
 
-inline std::vector<LegacySystem*> GetLegacyInventory(){
+inline std::vector<LegacyItem*> GetLegacyInventory(){
     std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Simulate delay
-    static std::vector<LegacySystem*> items;
+    static std::vector<LegacyItem*> items;
 
     return items;
 }

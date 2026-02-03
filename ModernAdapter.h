@@ -6,7 +6,7 @@
 class ModernItem{
     public:
     //We hold a pointer to the legacy item so we can modify quota later
-        explicit ModernItem(LegacySystem* legacy): legacy_ptr_(legacy){
+        explicit ModernItem(LegacyItem* legacy): legacy_ptr_(legacy){
             if (legacy){
             id_ = (legacy->id != nullptr)? std::string_view(legacy->id) : std::string_view{};
             value_ = legacy->value;}
@@ -27,7 +27,7 @@ class ModernItem{
         }
 
     private:
-        LegacySystem* legacy_ptr_ = nullptr;
+        LegacyItem* legacy_ptr_ = nullptr;
         std::string_view id_;
         int value_ = 0;
 };
