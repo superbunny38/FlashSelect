@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <span>
+#include <unordered_set>
 
 class FlashSelectEngine {
     public:
