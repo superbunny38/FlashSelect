@@ -55,6 +55,6 @@ int main(){
         std::cout<<"ID: "<<item.GetID()<<", Value: "<<item.GetValue()<<", Quota Remaining: "<<item.GetQuotaRemaining()<<"\n";
     }
 
-    cout<<"Flash Select: Terminated successfully.\n";
+    cout<<"\n\n\n\n\nFlash Select: Terminated successfully.\n";
     return 0;
 }

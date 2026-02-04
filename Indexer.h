@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "ModernAdapter.h"
+#include <string_view>
 
 class Indexer {
     public:
@@ -26,7 +27,7 @@ class Indexer {
                 }
             }
         }
-        const std::vector<ModernItem>& GetItemsForKeyword(const std::string& keyword) const {
+        const std::vector<ModernItem>& GetItemsForKeyword(const std::string_view keyword) const {
             static const std::vector<ModernItem> empty;
             auto it = index_table_.find(keyword);
             if (it != index_table_.end()) {

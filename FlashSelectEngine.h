@@ -1,14 +1,16 @@
 #pragma once
 #include "Indexer.h"
+#include "RegionMapper.h"
 #include <vector>
 #include <algorithm>
 #include <span>
 #include <unordered_set>
+#include <iostream>
 
 class FlashSelectEngine {
     public:
-        explicit FlashSelectEngine(const Indexer& indexer)
-            : indexer_(indexer) {}
+        explicit FlashSelectEngine(const Indexer& indexer, const RegionMapper& mapper)
+            : indexer_(indexer), region_mapper_(mapper) {}
 
         // THE HOT PATH
         // Returns top K items matching the query.
@@ -35,7 +37,7 @@ class FlashSelectEngine {
 
                 std::string_view token = query.substr(start, end - start);
                 if(!token.empty()){
-                    const auto& items = indexer_.GetItemsForKeyword(std::string(token));
+                    const auto& items = indexer_.GetItemsForKeyword(token);
                     for (const auto& item : items){
                         //Filter: Quota > 0 and avoid duplicates
                         if (item.GetQuotaRemaining() > 0){
@@ -56,9 +58,14 @@ class FlashSelectEngine {
                 candidates.resize(k);
             }
             return candidates;
-
         }
+
+        std::vector<ModernItem> SelectWithRegion(std::string_view query, std::string_view region_name, int k = 5){
+            
+        }
+
     private:
         const Indexer& indexer_;
+        const RegionMapper& region_mapper_;
 
 };
