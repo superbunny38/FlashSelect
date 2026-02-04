@@ -5,6 +5,7 @@
 
 class ModernItem{
     public:
+        ModernItem() = default;
     //We hold a pointer to the legacy item so we can modify quota later
         explicit ModernItem(LegacyItem* legacy): legacy_ptr_(legacy){
             if (legacy){
