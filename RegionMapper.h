@@ -60,6 +60,16 @@ class RegionMapper {
 
         }
 
+        void PreviewFile(const string& filename, size_t max_lines = 5){
+            ifstream file(filename);
+            string line;
+            size_t line_count = 0;
+            while (getline(file, line) && line_count < max_lines){
+                cout<<line<<"\n";
+                line_count++;
+            }
+        }
+
         //O(1) lookup: Returns the name corresponding to the given ID. (Returns a view into the main buffer)
         string_view GetName(int id) const{
             if (id < 0 || id >= id_to_name_.size()) {
