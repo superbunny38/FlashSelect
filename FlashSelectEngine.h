@@ -61,7 +61,20 @@ class FlashSelectEngine {
         }
 
         std::vector<ModernItem> SelectWithRegion(std::string_view query, std::string_view region_name, int k = 5){
-            
+            int region_id = region_mapper_.GetId(region_name);
+            if (region_id == -1){
+                std::cerr << "[FlashSelectEngine] Warning: Region '" << region_name << "' not found. Defaulting to global selection.\n";
+                return _SelectItems(query, k);
+            }
+
+            std::cout << "[Engine] Geotargetting Active: Region ID " << region_id << " (" << region_mapper_.GetName(region_id) << ")\n";
+
+            //Perform Search
+            std::vector<ModernItem> results = _SelectItems(query, k);
+
+            //TODO:
+            //Filter results by this region
+            return results;
         }
 
     private:

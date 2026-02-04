@@ -25,18 +25,22 @@ int main(){
 
     cout<<"Loading Indexer...\n";
     Indexer indexer;
-    FlashSelectEngine engine(indexer);
+    FlashSelectEngine engine(indexer, region_mapper);
     
     Measure("Boot: RegionMapper", [&](){
         region_mapper.LoadFromFile("regions.dat");
+    });
+
+    Measure("Boot: Indexer", [&](){
+        indexer.BuildIndex(legacy_items);
     });
     
     cout<<"\nPreview Region data...\n";
     region_mapper.PreviewFile("regions.dat");
 
-    Measure("Boot: Indexer", [&](){
-        indexer.BuildIndex(legacy_items);
-    });
+    cout<<"Testing Geotargeting...\n";
+    auto geo_results = engine.SelectWithRegion("tech","United States",5);
+
 
     Measure("Runtime: 1000 Queries", [&](){
         for (int i=0; i<1000; i++){
