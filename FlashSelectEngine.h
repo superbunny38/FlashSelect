@@ -22,52 +22,39 @@ class FlashSelectEngine {
             // Hint: Use indexer_.GetItemsForKeyword()
             // Hint: Use std::sort with a lambda for ranking
             std::vector<ModernItem> candidates;
-            //Tokenize query (simple split by space)
+            std::unordered_set<std::string_view> seen_ids;
+            
+            //Tokenize query by spaces
             size_t start = 0;
             while (start < query.size()){
                 size_t end = query.find(' ', start);
-
                 if (end == std::string_view::npos){
                     end = query.size();
                 }
 
                 std::string_view token = query.substr(start, end - start);
-                if (!token.empty()){
-                    //Retrieve items for token
+                if(!token.empty()){
                     const auto& items = indexer_.GetItemsForKeyword(std::string(token));
-
-                    //Filter items with quota > 0
-                    for(const auto& item : items){
+                    for (const auto& item : items){
+                        //Filter: Quota > 0 and avoid duplicates
                         if (item.GetQuotaRemaining() > 0){
-                            candidates.push_back(item);
+                            if (seen_ids.insert(item.GetID()).second){
+                                candidates.push_back(item);
+                            }
                         }
                     }
                 }
                 start = end + 1;
             }
-
-            //Deduplicate candidates based on ID (since different keywords may point to same item)
-            std::sort(candidates.begin(), candidates.end(), [](const ModernItem& a, const ModernItem& b){
-                return a.GetID() < b.GetID();
-            });
-
-            auto last = std::unique(candidates.begin(), candidates.end(), [](const ModernItem& a, const ModernItem& b){
-                return a.GetID() == b.GetID();
-            });
-
-            candidates.erase(last, candidates.end());
-
-            //Sort by Value DESC
+            //Sort by Value DESC - sorting only unique candidates
             std::sort(candidates.begin(), candidates.end(), [](const ModernItem& a, const ModernItem& b){
                 return a.GetValue() > b.GetValue();
             });
-
             //Select Top K
-            if (candidates.size() > k){
+            if (candidates.size() > static_cast<size_t>(k)){
                 candidates.resize(k);
             }
             return candidates;
-
 
         }
     private:
