@@ -26,7 +26,7 @@ class ModernItem{
                 return 0;
             }
             auto* atomic_ptr = reinterpret_cast<std::atomic<int>*>(&legacy_ptr_->quota_remaining);
-            return atomic_ptr->load();
+            return atomic_ptr->load(std::memory_order_relaxed);
         }
 
         //Thread-safe decrement of quota (not compatible with macOS though
