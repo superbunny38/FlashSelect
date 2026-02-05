@@ -17,8 +17,16 @@ class ModernItem{
         }
         int GetValue() const {
             return value_;}
+        // int GetQuotaRemaining() const {
+        //     return legacy_ptr_ ? legacy_ptr_->quota_remaining : 0;
+        // }
+        //Thread-safe mac os compatiblr get quota remaining
         int GetQuotaRemaining() const {
-            return legacy_ptr_ ? legacy_ptr_->quota_remaining : 0;
+            if (!legacy_ptr_){
+                return 0;
+            }
+            auto* atomic_ptr = reinterpret_cast<std::atomic<int>*>(&legacy_ptr_->quota_remaining);
+            return atomic_ptr->load();
         }
 
         //Thread-safe decrement of quota (not compatible with macOS though
