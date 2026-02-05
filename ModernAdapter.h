@@ -1,7 +1,7 @@
 #pragma once
 #include "LegacySystem.h"
 #include <string_view>
-
+#include <atomic>
 
 class ModernItem{
     public:
@@ -21,10 +21,30 @@ class ModernItem{
             return legacy_ptr_ ? legacy_ptr_->quota_remaining : 0;
         }
 
-        void DecrementQuota(){
-            if (legacy_ptr_){
-                legacy_ptr_->quota_remaining--;
+        //Thread-safe decrement of quota (not compatible with macOS though
+        //std::atoic_ref: to treat the raw int as atomic
+        // void DecrementQuota(){
+        //     if (legacy_ptr_){
+        //         std::atomic_ref<int> atomic_quota(legacy_ptr_->quota_remaining);
+        //         atomic_quota.fetch_sub(1, std::memory_order_relaxed);
+        //     }
+        // }
+
+        bool DecrementQuota(){
+            if (!legacy_ptr_){
+                return false;
             }
+
+            auto* atomic_ptr = reinterpret_cast<std::atomic<int>*>(&(legacy_ptr_->quota_remaining));
+
+            int current = atomic_ptr->load();
+
+            while (current > 0){
+                if (atomic_ptr->compare_exchange_weak(current, current - 1)){
+                    return true;
+                }
+            }
+            return false;
         }
 
     private:
